@@ -20,8 +20,6 @@ public class VSCodeService {
     
     public String createVSCode(Long id){
 
-        
-
         /* create namespace */
         Namespace ns = kubernetesClient
             .namespaces()
@@ -34,6 +32,92 @@ public class VSCodeService {
                 .build()
             );
 
+        /* create deployment */
+        Deployment dp = kubernetesClient
+            .apps()
+            .deployments()
+            .inNamespace(ns.getMetadata().getName())
+            .create(
+                new DeploymentBuilder()
+                    .withNewMetadata()
+                        .withName("vscode-dp-"+id)
+                        .addToLabels("app", "vscode")
+                    .endMetadata()
+                    .withNewSpec()
+                        .withReplicas(1)
+                        .editSelector()
+                            .addToMatchLabels("app", "vscode")
+                        .endSelector()
+                        .withNewTemplate()
+                            .withNewMetadata()
+                                .addToLabels("app", "vscode")
+                            .endMetadata()
+                            .withNewSpec()
+                                .addNewContainer()
+                                    .withName("vscode-pod-"+id)
+                                    .withImage("gitpod/openvscode-server")
+                                    .addNewPort()
+                                        .withHostPort(3000)
+                                    .endPort()
+                                .endContainer()
+                            .endSpec()
+                        .endTemplate()
+                    .endSpec()
+                    .build()
+            );
+        /* create service */
+        Service svc = kubernetesClient
+            .services()
+            .inNamespace(ns.getMetadata().getName())
+            .create(
+                new ServiceBuilder()
+                    .withNewMetadata()
+                        .withName("vscode-svc-"+id)
+                    .endMetadata()
+                    .withNewSpec()
+                        .addToSelector("app", "vscode")
+                        .addNewPort()
+                            .withProtocol("TCP")
+                            .withPort(80)
+                            .withNewTargetPort(3000)
+                        .endPort()
+                    .endSpec()
+                    .build()
+            );
+
+        /* create ingress */
+        Ingress ing = kubernetesClient
+            .network()
+            .v1()
+            .ingresses()
+            .inNamespace(ns.getMetadata().getName())
+            .create(
+                new IngressBuilder()
+                    .withNewMetadata()
+                        .withName("vscode-ing-"+id)
+                        .addToAnnotations("nginx.ingress.kubernetes.io/rewrite-target", "/$2")
+                    .endMetadata()
+                    .withNewSpec()
+                        .withIngressClassName("nginx")
+                        .addNewRule()
+                            .withNewHttp()
+                                .addNewPath()
+                                    .withPath("/")
+                                    .withPathType("Prefix")
+                                    .withNewBackend()
+                                        .withNewService()
+                                            .withName(svc.getMetadata().getName())
+                                            .withNewPort()
+                                                .withNumber(80)
+                                            .endPort()
+                                        .endService()
+                                    .endBackend()
+                                .endPath()
+                            .endHttp()
+                        .endRule()
+                    .endSpec()
+                .build()
+            );
 
         return "";
     }
