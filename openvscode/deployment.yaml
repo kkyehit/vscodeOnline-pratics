@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openvscode-deployment
+  labels:
+    app: openvscode
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openvscode
+  template:
+    metadata:
+      labels:
+        app: openvscode
+    spec:
+      containers:
+      - name: openvscode
+        image: gitpod/openvscode-server
+        env:
+        - name: connectionToken
+          value: "abcde12345"
+        ports:
+        - containerPort: 3000
