@@ -19,7 +19,6 @@ public class VSCodeService {
     private KubernetesClient kubernetesClient;
     
     public String createVSCode(Long id){
-
         /* create namespace */
         Namespace ns = kubernetesClient
             .namespaces()
@@ -45,7 +44,7 @@ public class VSCodeService {
                     .endMetadata()
                     .withNewSpec()
                         .withReplicas(1)
-                        .editSelector()
+                        .withNewSelector()
                             .addToMatchLabels("app", "vscode")
                         .endSelector()
                         .withNewTemplate()
@@ -57,7 +56,7 @@ public class VSCodeService {
                                     .withName("vscode-pod-"+id)
                                     .withImage("gitpod/openvscode-server")
                                     .addNewPort()
-                                        .withHostPort(3000)
+                                        .withContainerPort(3000)
                                     .endPort()
                                 .endContainer()
                             .endSpec()
@@ -102,7 +101,7 @@ public class VSCodeService {
                         .addNewRule()
                             .withNewHttp()
                                 .addNewPath()
-                                    .withPath("/")
+                                    .withPath("/"+id)
                                     .withPathType("Prefix")
                                     .withNewBackend()
                                         .withNewService()

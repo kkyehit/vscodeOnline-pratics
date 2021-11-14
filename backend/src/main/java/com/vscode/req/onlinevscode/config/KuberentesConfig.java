@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
+
 @Configuration
 public class KuberentesConfig {
     
