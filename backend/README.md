@@ -31,3 +31,10 @@
 ## 삭제
 - curl -X DELETE localhost:8080/vscode/1
 - curl -X DELETE localhost:8080/vscode/2
+
+
+
+## issue
+- 컨테이너간 격리안됨 ( {host}/ 환경 공유됨 )
+- 한명 한명 다른 IP 사용하면 되긴함
+- 도메인을 이용해 분리하는 방법 고민 해보자
