@@ -58,7 +58,17 @@ public class VSCodeService {
                                     .addNewPort()
                                         .withContainerPort(3000)
                                     .endPort()
+                                    .addNewVolumeMount()
+                                        .withMountPath("/"+id)
+                                        .withName("vscode-volume-"+id)
+                                    .endVolumeMount()
                                 .endContainer()
+                                .addNewVolume()
+                                    .withName("vscode-volume-"+id)
+                                    .withNewHostPath()
+                                        .withPath("/data")
+                                    .endHostPath()
+                                .endVolume()
                             .endSpec()
                         .endTemplate()
                     .endSpec()
@@ -94,7 +104,7 @@ public class VSCodeService {
                 new IngressBuilder()
                     .withNewMetadata()
                         .withName("vscode-ing-"+id)
-                        .addToAnnotations("nginx.ingress.kubernetes.io/rewrite-target", "/$2")
+                        //.addToAnnotations("nginx.ingress.kubernetes.io/rewrite-target", "/$2")
                     .endMetadata()
                     .withNewSpec()
                         .withIngressClassName("nginx")
@@ -118,6 +128,25 @@ public class VSCodeService {
                 .build()
             );
 
+        return "";
+    }
+
+    public String getLogsVSCodePod(Long id){
+         /* kubectl logs deployment/vscode-dp-{id} -n vscode-ns-{id} */
+        return kubernetesClient
+            .apps()
+            .deployments()
+            .inNamespace("vscode-ns-"+id)
+            .withName("vscode-dp-"+id)
+            .getLog();
+    }
+
+    public String deleteVSCode(Long id){
+        /* delete namespace */
+        kubernetesClient
+            .namespaces()
+            .withName("vscode-ns-"+id)
+            .delete();
         return "";
     }
 }
