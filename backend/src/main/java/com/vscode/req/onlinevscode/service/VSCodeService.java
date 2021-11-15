@@ -104,7 +104,7 @@ public class VSCodeService {
                 new IngressBuilder()
                     .withNewMetadata()
                         .withName("vscode-ing-"+id)
-                        //.addToAnnotations("nginx.ingress.kubernetes.io/rewrite-target", "/$2")
+                        .addToAnnotations("nginx.ingress.kubernetes.io/rewrite-target", "/$2")
                     .endMetadata()
                     .withNewSpec()
                         .withIngressClassName("nginx")
