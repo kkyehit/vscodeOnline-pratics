@@ -18,7 +18,16 @@
 - host : *
 - path : /{id}
 - class : nginx
-## 호출
-- curl -X PSOT localhost:8080/vscode/1
+## 생성 & 조회
+- curl -X POST localhost:8080/vscode/1
 - curl -X GET localhost:8080/vscode/1
+
+- curl -X POST localhost:8080/vscode/2
+- curl -X GET localhost:8080/vscode/2
+
+## 접속
+- `{host}/{id}?tkn=*****` 로 접속한 후 `{host}/{id}`로 다시 접속
+
+## 삭제
 - curl -X DELETE localhost:8080/vscode/1
+- curl -X DELETE localhost:8080/vscode/2
