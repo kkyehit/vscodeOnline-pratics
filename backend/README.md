@@ -18,3 +18,7 @@
 - host : *
 - path : /{id}
 - class : nginx
+## 호출
+- curl -X PSOT localhost:8080/vscode/1
+- curl -X GET localhost:8080/vscode/1
+- curl -X DELETE localhost:8080/vscode/1
