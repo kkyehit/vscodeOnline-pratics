@@ -139,9 +139,6 @@ public class VSCodeService {
             .getLog();
 
         /* tkn 추출 */
-        System.out.println(log.indexOf("?tkn="));
-        System.out.println(log.substring(log.indexOf("?tkn="),log.length()));
-        System.out.println(log.substring(log.indexOf("?tkn="),log.length()).split("\n")[0]);
         vscodeModel.setTkn(log.substring(log.indexOf("?tkn="),log.length()).split("\n")[0]);
 
         /* create service */
