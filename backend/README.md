@@ -25,6 +25,8 @@
 - curl -X POST localhost:8080/vscode/2
 - curl -X GET localhost:8080/vscode/2
 
+## 목록 확인
+- curl -X GET localhost:8080/vscode/
 ## 접속
 - `{host}/{id}?tkn=*****` 로 접속한 후 `{host}/{id}`로 다시 접속
 
