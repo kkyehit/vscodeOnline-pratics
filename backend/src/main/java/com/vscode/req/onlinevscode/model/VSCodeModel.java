@@ -11,8 +11,7 @@ import javax.persistence.Table;
 public class VSCodeModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-
-    Long userId;
-    String key;
+    Long id;        // VSCode ID
+    String tkn;     // 인증 token
+    String URL;     // 접속 URL
 }

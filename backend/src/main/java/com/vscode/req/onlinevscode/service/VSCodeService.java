@@ -1,6 +1,7 @@
 package com.vscode.req.onlinevscode.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
@@ -15,6 +16,16 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 @org.springframework.stereotype.Service
 public class VSCodeService {
 
+    /** PREFIX */
+    private static final String NAMESPACE_PREFIX="vscode-ns-";
+    private static final String DEPLOYMENT_PREFIX="vscode-dp-";
+    private static final String POD_PREFIX="vscode-pod-";
+    private static final String SERVICE_PREFIX="vscode-svc-";
+    private static final String INGRESS_PREFIX="vscode-ing-";
+    /**Domain */
+    @Value("${custom.domain}")
+    private String DOMAIN;
+
     @Autowired
     private KubernetesClient kubernetesClient;
     
@@ -25,7 +36,7 @@ public class VSCodeService {
             .create(
                 new NamespaceBuilder()
                     .withNewMetadata()
-                        .withName("vscode-ns-"+id)
+                        .withName(NAMESPACE_PREFIX+id)
                         .addToLabels("app", "vscode")
                     .endMetadata()
                 .build()
@@ -39,7 +50,7 @@ public class VSCodeService {
             .create(
                 new DeploymentBuilder()
                     .withNewMetadata()
-                        .withName("vscode-dp-"+id)
+                        .withName(DEPLOYMENT_PREFIX+id)
                         .addToLabels("app", "vscode")
                     .endMetadata()
                     .withNewSpec()
@@ -53,20 +64,20 @@ public class VSCodeService {
                             .endMetadata()
                             .withNewSpec()
                                 .addNewContainer()
-                                    .withName("vscode-pod-"+id)
+                                    .withName(POD_PREFIX+id)
                                     .withImage("gitpod/openvscode-server")
                                     .addNewPort()
                                         .withContainerPort(3000)
                                     .endPort()
-                                    .addNewVolumeMount()
-                                        .withMountPath("/"+id)
-                                        .withName("vscode-volume-"+id)
-                                    .endVolumeMount()
+                                    // .addNewVolumeMount()
+                                    //     .withMountPath("/home/workspace/")
+                                    //     .withName("vscode-volume-"+id)
+                                    // .endVolumeMount()
                                 .endContainer()
                                 .addNewVolume()
                                     .withName("vscode-volume-"+id)
                                     .withNewHostPath()
-                                        .withPath("/data")
+                                        .withPath("/data/"+id)
                                     .endHostPath()
                                 .endVolume()
                             .endSpec()
@@ -74,6 +85,7 @@ public class VSCodeService {
                     .endSpec()
                     .build()
             );
+
         /* create service */
         Service svc = kubernetesClient
             .services()
@@ -81,7 +93,7 @@ public class VSCodeService {
             .create(
                 new ServiceBuilder()
                     .withNewMetadata()
-                        .withName("vscode-svc-"+id)
+                        .withName(SERVICE_PREFIX+id)
                     .endMetadata()
                     .withNewSpec()
                         .addToSelector("app", "vscode")
@@ -103,15 +115,16 @@ public class VSCodeService {
             .create(
                 new IngressBuilder()
                     .withNewMetadata()
-                        .withName("vscode-ing-"+id)
-                        .addToAnnotations("nginx.ingress.kubernetes.io/rewrite-target", "/$2")
+                        .withName(INGRESS_PREFIX+id)
+                        //.addToAnnotations("nginx.ingress.kubernetes.io/rewrite-target", "/$2")
                     .endMetadata()
                     .withNewSpec()
                         .withIngressClassName("nginx")
                         .addNewRule()
+                            .withHost(id+"."+DOMAIN)
                             .withNewHttp()
                                 .addNewPath()
-                                    .withPath("/"+id)
+                                    .withPath("/")
                                     .withPathType("Prefix")
                                     .withNewBackend()
                                         .withNewService()
@@ -136,8 +149,8 @@ public class VSCodeService {
         return kubernetesClient
             .apps()
             .deployments()
-            .inNamespace("vscode-ns-"+id)
-            .withName("vscode-dp-"+id)
+            .inNamespace(NAMESPACE_PREFIX+id)
+            .withName(DEPLOYMENT_PREFIX+id)
             .getLog();
     }
 
@@ -145,7 +158,7 @@ public class VSCodeService {
         /* delete namespace */
         kubernetesClient
             .namespaces()
-            .withName("vscode-ns-"+id)
+            .withName(NAMESPACE_PREFIX+id)
             .delete();
         return "";
     }

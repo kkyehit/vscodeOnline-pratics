@@ -4,3 +4,7 @@ server:
 # master 정보는 kubectl cluster-info로 확인
 kubernetes:
   master: 
+
+# Custom
+custom:
+  domain: kkyehit.com
