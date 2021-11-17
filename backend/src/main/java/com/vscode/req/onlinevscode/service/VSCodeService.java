@@ -1,5 +1,11 @@
 package com.vscode.req.onlinevscode.service;
 
+import java.util.List;
+import java.util.concurrent.TimeoutException;
+
+import com.vscode.req.onlinevscode.model.VSCodeModel;
+import com.vscode.req.onlinevscode.repository.VSCodeRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -22,14 +28,27 @@ public class VSCodeService {
     private static final String POD_PREFIX="vscode-pod-";
     private static final String SERVICE_PREFIX="vscode-svc-";
     private static final String INGRESS_PREFIX="vscode-ing-";
+
+    /** availableReplicas */
+    private static final Integer AVAILAVLE_REPLICAS=1;
+
+    /** TIMEOUT */
+    private static final Integer TIMEOUT=120;
+
     /**Domain */
     @Value("${custom.domain}")
     private String DOMAIN;
 
     @Autowired
     private KubernetesClient kubernetesClient;
+
+    @Autowired
+    private VSCodeRepository vscodeRepository;
     
-    public String createVSCode(Long id){
+    public String createVSCode(Long id) throws TimeoutException{
+
+        VSCodeModel vscodeModel = new VSCodeModel();
+
         /* create namespace */
         Namespace ns = kubernetesClient
             .namespaces()
@@ -54,7 +73,7 @@ public class VSCodeService {
                         .addToLabels("app", "vscode")
                     .endMetadata()
                     .withNewSpec()
-                        .withReplicas(1)
+                        .withReplicas(AVAILAVLE_REPLICAS)
                         .withNewSelector()
                             .addToMatchLabels("app", "vscode")
                         .endSelector()
@@ -65,10 +84,15 @@ public class VSCodeService {
                             .withNewSpec()
                                 .addNewContainer()
                                     .withName(POD_PREFIX+id)
-                                    .withImage("gitpod/openvscode-server")
+                                    .withImage("huijunvscodeacr.azurecr.io/openvscode")
+                                    .withImagePullPolicy("Always")
                                     .addNewPort()
                                         .withContainerPort(3000)
                                     .endPort()
+                                    .addNewEnv()
+                                        .withName("CONNECTION_TOKEN")
+                                        .withValue("token"+id)
+                                    .endEnv()
                                     // .addNewVolumeMount()
                                     //     .withMountPath("/home/workspace/")
                                     //     .withName("vscode-volume-"+id)
@@ -85,6 +109,41 @@ public class VSCodeService {
                     .endSpec()
                     .build()
             );
+
+        /* AVAILAVLE_REPLICAS 만큼 Pod가 띄어지기를 기다림 (TIMEOUT초 만큼) */
+        int time = 0;
+        while(dp.getStatus() == null 
+            || dp.getStatus().getAvailableReplicas() == null 
+            || dp.getStatus().getAvailableReplicas().intValue() != AVAILAVLE_REPLICAS){
+
+            dp = kubernetesClient
+                .apps()
+                .deployments()
+                .inNamespace(ns.getMetadata().getName())
+                .withName(DEPLOYMENT_PREFIX+id)
+                .get();
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            if(++time == TIMEOUT) throw new TimeoutException();
+        };
+        /* Log 확인 */
+        String log = kubernetesClient
+            .apps()
+            .deployments()
+            .inNamespace(NAMESPACE_PREFIX+id)
+            .withName(DEPLOYMENT_PREFIX+id)
+            .getLog();
+
+        /* tkn 추출 */
+        System.out.println(log.indexOf("?tkn="));
+        System.out.println(log.substring(log.indexOf("?tkn="),log.length()));
+        System.out.println(log.substring(log.indexOf("?tkn="),log.length()).split("\n")[0]);
+        vscodeModel.setTkn(log.substring(log.indexOf("?tkn="),log.length()).split("\n")[0]);
 
         /* create service */
         Service svc = kubernetesClient
@@ -141,6 +200,9 @@ public class VSCodeService {
                 .build()
             );
 
+        vscodeModel.setURL(id+"."+DOMAIN);
+
+        vscodeRepository.save(vscodeModel);
         return "";
     }
 
@@ -161,5 +223,10 @@ public class VSCodeService {
             .withName(NAMESPACE_PREFIX+id)
             .delete();
         return "";
+    }
+
+
+    public List<VSCodeModel> getVSCodeList(){
+        return vscodeRepository.findAll();
     }
 }
