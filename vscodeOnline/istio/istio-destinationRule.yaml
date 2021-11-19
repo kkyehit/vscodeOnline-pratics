@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: web-destination
+  namespace: vscode-ns-1
+spec:
+  host: vscode-svc-1.vscode-ns-1.svc.cluster.local
+  subsets:
+  - name: v1
+    labels:
+      version: v1.0
+    trafficPolicy:
+      loadBalancer: 
+        simple: ROUND_ROBIN
+      connectionPool:
+        tcp:
+          maxConnections: 100
+          connectTimeout: 30ms
+          tcpKeepalive:
+            time: 7200s
+            interval: 75s

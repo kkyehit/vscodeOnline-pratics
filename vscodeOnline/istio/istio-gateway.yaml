@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: my-gateway
+  namespace: vscode-ns-1
+spec:
+  selector:
+    istio: ingressgateway # default istio contoller
+  servers:
+  - port:
+      number: 80
+      name: vscode
+      protocol: HTTP
+    hosts:
+    - 4.kkyehit.com # 접속 주소
+
+# kubectl get gw -n vscode-ns-1

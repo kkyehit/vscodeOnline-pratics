@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: vscode-vertual-service-1
+  namespace: vscode-ns-1
+spec:
+  hosts:
+  - 4.kkyehit.com
+  gateways:
+  - vscode-ns-1/my-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: vscode-svc-1.vscode-ns-1.svc.cluster.local
+        port:
+           number: 80
