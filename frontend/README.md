@@ -32,3 +32,28 @@ vue build src/App.vue
 ```
 > build [options] [entry]
    - dist 디렉토리에 빌드된 파일들이 만들어짐
+
+# 2. Ajax 사용하기
+## 2.1. axios 모듈 설치
+```
+npm install axios
+```
+## 2.2. axios 사용
+- 라이브러리를 설치하고 나면 axios라는 변수에 접근할 수 있게된다.
+
+
+
+# 문제 
+## 1. Error: Cannot find module '@vue/cli-plugin-babel'
+### 원인
+- axios설치를 위해 아래 명령어 실행 함
+```
+npm audit fix --force
+```
+
+### 해결 방법
+- @vue/cli-plugin-babel 설치
+```
+npm i @vue/cli-plugin-babel
+```
+- 해결안되서 vue 재설치
