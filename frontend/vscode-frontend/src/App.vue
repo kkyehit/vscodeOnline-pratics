@@ -11,7 +11,7 @@
 <script>
 import Header from './components/Header.vue'
 import Contents from './components/Contents.vue'
-import MyFooter from './components/Footer.vue'
+import MyFooter from './components/MyFooter.vue'
 import Sidebar from './components/Sidebar.vue'
 
 import axios from 'axios'
