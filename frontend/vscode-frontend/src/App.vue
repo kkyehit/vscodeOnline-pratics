@@ -2,7 +2,7 @@
   <div id="app">
     <Header></Header>
     <!-- <img alt="Vue logo" src="./assets/logo.png"> -->
-    <Contents></Contents>
+    <Contents v-bind:vscodeList="vscodeList"></Contents>
     <MyFooter></MyFooter>
     <Sidebar></Sidebar>
   </div>
@@ -18,15 +18,6 @@ import axios from 'axios'
 
 var backendUrl = "http://localhost:8100"
 
-var getVSCodeList = function(){
-  var path = "/vscode/"
-  axios.get(backendUrl+path).then(
-    res=>console.log("res : "+res.data)
-  )
-}
-
-var vscodeList = getVSCodeList()
-
 export default {
   name: 'App',
   components: {
@@ -37,11 +28,26 @@ export default {
   },
   data() {
     return {
-      vscodeList: vscodeList
+      vscodeList: []
     }
   },
+  created() {
+    var path = "/vscode/"
+    axios.get(backendUrl+path).then(
+      res=>{
+        this.vscodeList=res.data
+      }
+    )   
+  },
   methods: {
-    getVSCodeList : getVSCodeList
+    getVSCodeList(){
+      var path = "/vscode/"
+      axios.get(backendUrl+path).then(
+        res=>{
+          this.vscodeList=res.data
+        }
+      )
+    }
   },
 }
 </script>
