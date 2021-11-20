@@ -16,7 +16,7 @@ import Sidebar from './components/Sidebar.vue'
 
 import axios from 'axios'
 
-var backendUrl = "localhost:8100"
+var backendUrl = "http://localhost:8100"
 
 var getVSCodeList = function(){
   var path = "/vscode/"
