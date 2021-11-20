@@ -22,11 +22,13 @@ npm install
 ```
 ### 1.2.4. service
 ```
-vue serve
+vue serve src/App.vue
 ```
 > serve [options] [entry]
+   - http://localhost:8080/ 로 접속 가능
 ### 1.2.5. 빌드
 ```
-vue build
+vue build src/App.vue
 ```
 > build [options] [entry]
+   - dist 디렉토리에 빌드된 파일들이 만들어짐
