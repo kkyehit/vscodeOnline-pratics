@@ -16,7 +16,7 @@ import io.fabric8.kubernetes.api.model.networking.v1.IngressBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
 @Component
-public class KubernetesResourceManagerBean {
+public class KubernetesResourceManagerUtill {
     
     @Autowired
     private KubernetesClient kubernetesClient;

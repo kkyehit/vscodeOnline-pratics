@@ -3,7 +3,7 @@ package com.vscode.req.onlinevscode.vscode.service;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import com.vscode.req.onlinevscode.utill.KubernetesResourceManagerBean;
+import com.vscode.req.onlinevscode.utill.KubernetesResourceManagerUtill;
 import com.vscode.req.onlinevscode.vscode.model.VSCodeModel;
 import com.vscode.req.onlinevscode.vscode.repository.VSCodeRepository;
 
@@ -35,7 +35,7 @@ public class VSCodeService {
     private String DOMAIN;
 
     @Autowired
-    private KubernetesResourceManagerBean kubernetesResourceManagerBean;
+    private KubernetesResourceManagerUtill kubernetesResourceManagerUtill;
 
     @Autowired
     private VSCodeRepository vscodeRepository;
@@ -55,23 +55,23 @@ public class VSCodeService {
         String token="token";
 
         /* create namespace */
-        kubernetesResourceManagerBean.createNamespace(namespaceName);
+        kubernetesResourceManagerUtill.createNamespace(namespaceName);
         /* create deployment */
-        kubernetesResourceManagerBean.createDeployment(deploymentName, namespaceName, podName, AVAILAVLE_REPLICAS, IMAGE_NAME, token, volumeName, volumePath);
+        kubernetesResourceManagerUtill.createDeployment(deploymentName, namespaceName, podName, AVAILAVLE_REPLICAS, IMAGE_NAME, token, volumeName, volumePath);
         /* AVAILAVLE_REPLICAS 만큼 Pod가 띄어지기를 기다림 (TIMEOUT초 만큼) */
-        kubernetesResourceManagerBean.waitDeploymentIsValid(deploymentName, namespaceName, AVAILAVLE_REPLICAS, TIMEOUT);
+        kubernetesResourceManagerUtill.waitDeploymentIsValid(deploymentName, namespaceName, AVAILAVLE_REPLICAS, TIMEOUT);
         
         /* Log 확인 */
-        String log = kubernetesResourceManagerBean.getDeploymentLogs(deploymentName, namespaceName);
+        String log = kubernetesResourceManagerUtill.getDeploymentLogs(deploymentName, namespaceName);
 
         /* tkn 추출 */
         vscodeModel.setTkn(log.substring(log.indexOf("?tkn="),log.length()).split("\n")[0]);
 
         /* create service */
-        kubernetesResourceManagerBean.createService(serviceName, namespaceName);
+        kubernetesResourceManagerUtill.createService(serviceName, namespaceName);
 
         /* create ingress */
-        kubernetesResourceManagerBean.createIngress(ingressName, namespaceName, serviceName, hostName);
+        kubernetesResourceManagerUtill.createIngress(ingressName, namespaceName, serviceName, hostName);
         
         /* domain 저장 */
         vscodeModel.setURL(id+"."+DOMAIN);
@@ -86,14 +86,14 @@ public class VSCodeService {
         String deploymentName=DEPLOYMENT_PREFIX+id;
 
          /* kubectl logs deployment/vscode-dp-{id} -n vscode-ns-{id} */
-        return kubernetesResourceManagerBean.getDeploymentLogs(deploymentName, namespaceName);
+        return kubernetesResourceManagerUtill.getDeploymentLogs(deploymentName, namespaceName);
     }
 
     public String deleteVSCode(Long id){
         String namespaceName=NAMESPACE_PREFIX+id;
 
         /* delete namespace */
-        return kubernetesResourceManagerBean.deleteNamespace(namespaceName);
+        return kubernetesResourceManagerUtill.deleteNamespace(namespaceName);
     }
 
 
