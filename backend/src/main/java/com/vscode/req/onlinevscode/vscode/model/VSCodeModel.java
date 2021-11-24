@@ -19,4 +19,5 @@ public class VSCodeModel {
     Long id;        // VSCode ID
     String tkn;     // 인증 token
     String URL;     // 접속 URL
+    Long userId;    // 사용자 ID
 }

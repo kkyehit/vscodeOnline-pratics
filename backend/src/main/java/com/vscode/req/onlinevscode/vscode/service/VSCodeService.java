@@ -3,21 +3,12 @@ package com.vscode.req.onlinevscode.vscode.service;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import com.vscode.req.onlinevscode.utill.KubernetesResourceManagerBean;
 import com.vscode.req.onlinevscode.vscode.model.VSCodeModel;
 import com.vscode.req.onlinevscode.vscode.repository.VSCodeRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.NamespaceBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
-import io.fabric8.kubernetes.api.model.networking.v1.IngressBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
 
 @org.springframework.stereotype.Service
 public class VSCodeService {
@@ -28,9 +19,13 @@ public class VSCodeService {
     private static final String POD_PREFIX="vscode-pod-";
     private static final String SERVICE_PREFIX="vscode-svc-";
     private static final String INGRESS_PREFIX="vscode-ing-";
+    private static final String VOLUME_PREFIX="vscode-volume-";
+    private static final String VOLUME_PATH_PREFIX="/data/";
 
     /** availableReplicas */
     private static final Integer AVAILAVLE_REPLICAS=1;
+
+    private static final String IMAGE_NAME="gitpod/openvscode-server";
 
     /** TIMEOUT */
     private static final Integer TIMEOUT=120;
@@ -40,7 +35,7 @@ public class VSCodeService {
     private String DOMAIN;
 
     @Autowired
-    private KubernetesClient kubernetesClient;
+    private KubernetesResourceManagerBean kubernetesResourceManagerBean;
 
     @Autowired
     private VSCodeRepository vscodeRepository;
@@ -49,176 +44,56 @@ public class VSCodeService {
 
         VSCodeModel vscodeModel = new VSCodeModel();
 
+        String namespaceName=NAMESPACE_PREFIX+id;
+        String deploymentName=DEPLOYMENT_PREFIX+id;
+        String podName=POD_PREFIX+id;
+        String volumeName=VOLUME_PREFIX+id;
+        String volumePath=VOLUME_PATH_PREFIX+id;
+        String serviceName=SERVICE_PREFIX+id;
+        String ingressName=INGRESS_PREFIX+id;
+        String hostName=id+"."+DOMAIN;
+        String token="token";
+
         /* create namespace */
-        Namespace ns = kubernetesClient
-            .namespaces()
-            .create(
-                new NamespaceBuilder()
-                    .withNewMetadata()
-                        .withName(NAMESPACE_PREFIX+id)
-                        .addToLabels("app", "vscode")
-                    .endMetadata()
-                .build()
-            );
-
+        kubernetesResourceManagerBean.createNamespace(namespaceName);
         /* create deployment */
-        Deployment dp = kubernetesClient
-            .apps()
-            .deployments()
-            .inNamespace(ns.getMetadata().getName())
-            .create(
-                new DeploymentBuilder()
-                    .withNewMetadata()
-                        .withName(DEPLOYMENT_PREFIX+id)
-                        .addToLabels("app", "vscode")
-                    .endMetadata()
-                    .withNewSpec()
-                        .withReplicas(AVAILAVLE_REPLICAS)
-                        .withNewSelector()
-                            .addToMatchLabels("app", "vscode")
-                        .endSelector()
-                        .withNewTemplate()
-                            .withNewMetadata()
-                                .addToLabels("app", "vscode")
-                            .endMetadata()
-                            .withNewSpec()
-                                .addNewContainer()
-                                    .withName(POD_PREFIX+id)
-                                    .withImage("gitpod/openvscode-server")
-                                    .addNewPort()
-                                        .withContainerPort(3000)
-                                    .endPort()
-                                    .addNewEnv()
-                                        .withName("CONNECTION_TOKEN")
-                                        .withValue(""+id)
-                                    .endEnv()
-                                    // .addNewVolumeMount()
-                                    //     .withMountPath("/home/workspace/")
-                                    //     .withName("vscode-volume-"+id)
-                                    // .endVolumeMount()
-                                .endContainer()
-                                .addNewVolume()
-                                    .withName("vscode-volume-"+id)
-                                    .withNewHostPath()
-                                        .withPath("/data/"+id)
-                                    .endHostPath()
-                                .endVolume()
-                            .endSpec()
-                        .endTemplate()
-                    .endSpec()
-                    .build()
-            );
-
+        kubernetesResourceManagerBean.createDeployment(deploymentName, namespaceName, podName, AVAILAVLE_REPLICAS, IMAGE_NAME, token, volumeName, volumePath);
         /* AVAILAVLE_REPLICAS 만큼 Pod가 띄어지기를 기다림 (TIMEOUT초 만큼) */
-        int time = 0;
-        while(dp.getStatus() == null 
-            || dp.getStatus().getAvailableReplicas() == null 
-            || dp.getStatus().getAvailableReplicas().intValue() != AVAILAVLE_REPLICAS){
-
-            dp = kubernetesClient
-                .apps()
-                .deployments()
-                .inNamespace(ns.getMetadata().getName())
-                .withName(DEPLOYMENT_PREFIX+id)
-                .get();
-
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            if(++time == TIMEOUT) throw new TimeoutException();
-        };
+        kubernetesResourceManagerBean.waitDeploymentIsValid(deploymentName, namespaceName, AVAILAVLE_REPLICAS, TIMEOUT);
+        
         /* Log 확인 */
-        String log = kubernetesClient
-            .apps()
-            .deployments()
-            .inNamespace(NAMESPACE_PREFIX+id)
-            .withName(DEPLOYMENT_PREFIX+id)
-            .getLog();
+        String log = kubernetesResourceManagerBean.getDeploymentLogs(deploymentName, namespaceName);
 
         /* tkn 추출 */
         vscodeModel.setTkn(log.substring(log.indexOf("?tkn="),log.length()).split("\n")[0]);
 
         /* create service */
-        Service svc = kubernetesClient
-            .services()
-            .inNamespace(ns.getMetadata().getName())
-            .create(
-                new ServiceBuilder()
-                    .withNewMetadata()
-                        .withName(SERVICE_PREFIX+id)
-                    .endMetadata()
-                    .withNewSpec()
-                        .addToSelector("app", "vscode")
-                        .addNewPort()
-                            .withProtocol("TCP")
-                            .withPort(80)
-                            .withNewTargetPort(3000)
-                        .endPort()
-                    .endSpec()
-                    .build()
-            );
+        kubernetesResourceManagerBean.createService(serviceName, namespaceName);
 
         /* create ingress */
-        Ingress ing = kubernetesClient
-            .network()
-            .v1()
-            .ingresses()
-            .inNamespace(ns.getMetadata().getName())
-            .create(
-                new IngressBuilder()
-                    .withNewMetadata()
-                        .withName(INGRESS_PREFIX+id)
-                        //.addToAnnotations("nginx.ingress.kubernetes.io/rewrite-target", "/$2")
-                    .endMetadata()
-                    .withNewSpec()
-                        .withIngressClassName("nginx")
-                        .addNewRule()
-                            .withHost(id+"."+DOMAIN)
-                            .withNewHttp()
-                                .addNewPath()
-                                    .withPath("/")
-                                    .withPathType("Prefix")
-                                    .withNewBackend()
-                                        .withNewService()
-                                            .withName(svc.getMetadata().getName())
-                                            .withNewPort()
-                                                .withNumber(80)
-                                            .endPort()
-                                        .endService()
-                                    .endBackend()
-                                .endPath()
-                            .endHttp()
-                        .endRule()
-                    .endSpec()
-                .build()
-            );
-
+        kubernetesResourceManagerBean.createIngress(ingressName, namespaceName, serviceName, hostName);
+        
+        /* domain 저장 */
         vscodeModel.setURL(id+"."+DOMAIN);
 
+        /* db에 저장 */
         vscodeRepository.save(vscodeModel);
         return "";
     }
 
     public String getLogsVSCodePod(Long id){
+        String namespaceName=NAMESPACE_PREFIX+id;
+        String deploymentName=DEPLOYMENT_PREFIX+id;
+
          /* kubectl logs deployment/vscode-dp-{id} -n vscode-ns-{id} */
-        return kubernetesClient
-            .apps()
-            .deployments()
-            .inNamespace(NAMESPACE_PREFIX+id)
-            .withName(DEPLOYMENT_PREFIX+id)
-            .getLog();
+        return kubernetesResourceManagerBean.getDeploymentLogs(deploymentName, namespaceName);
     }
 
     public String deleteVSCode(Long id){
+        String namespaceName=NAMESPACE_PREFIX+id;
+
         /* delete namespace */
-        kubernetesClient
-            .namespaces()
-            .withName(NAMESPACE_PREFIX+id)
-            .delete();
-        return "";
+        return kubernetesResourceManagerBean.deleteNamespace(namespaceName);
     }
 
 
