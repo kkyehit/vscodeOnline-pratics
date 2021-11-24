@@ -1,6 +1,6 @@
-package com.vscode.req.onlinevscode.repository;
+package com.vscode.req.onlinevscode.vscode.repository;
 
-import com.vscode.req.onlinevscode.model.VSCodeModel;
+import com.vscode.req.onlinevscode.vscode.model.VSCodeModel;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

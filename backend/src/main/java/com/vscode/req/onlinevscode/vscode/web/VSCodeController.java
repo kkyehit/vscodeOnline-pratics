@@ -1,10 +1,10 @@
-package com.vscode.req.onlinevscode.web;
+package com.vscode.req.onlinevscode.vscode.web;
 
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import com.vscode.req.onlinevscode.model.VSCodeModel;
-import com.vscode.req.onlinevscode.service.VSCodeService;
+import com.vscode.req.onlinevscode.vscode.model.VSCodeModel;
+import com.vscode.req.onlinevscode.vscode.service.VSCodeService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;

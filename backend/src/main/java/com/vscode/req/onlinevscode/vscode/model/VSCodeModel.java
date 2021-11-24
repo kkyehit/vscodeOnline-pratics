@@ -1,4 +1,4 @@
-package com.vscode.req.onlinevscode.model;
+package com.vscode.req.onlinevscode.vscode.model;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

@@ -1,10 +1,10 @@
-package com.vscode.req.onlinevscode.service;
+package com.vscode.req.onlinevscode.vscode.service;
 
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import com.vscode.req.onlinevscode.model.VSCodeModel;
-import com.vscode.req.onlinevscode.repository.VSCodeRepository;
+import com.vscode.req.onlinevscode.vscode.model.VSCodeModel;
+import com.vscode.req.onlinevscode.vscode.repository.VSCodeRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
