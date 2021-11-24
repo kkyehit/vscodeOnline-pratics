@@ -1,54 +1,15 @@
 <template>
   <div id="app">
-    <Header></Header>
-    <!-- <img alt="Vue logo" src="./assets/logo.png"> -->
-    <Contents v-bind:vscodeList="vscodeList"></Contents>
-    <MyFooter></MyFooter>
-    <Sidebar></Sidebar>
+    <router-link to="/">login</router-link>
+    <br>
+    <router-link to="/main">main</router-link>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import Header from './components/Header.vue'
-import Contents from './components/Contents.vue'
-import MyFooter from './components/MyFooter.vue'
-import Sidebar from './components/Sidebar.vue'
-
-import axios from 'axios'
-
-var backendUrl = "http://localhost:8100"
-
 export default {
-  name: 'App',
-  components: {
-    Header,
-    Contents, 
-    MyFooter,
-    Sidebar,
-  },
-  data() {
-    return {
-      vscodeList: []
-    }
-  },
-  created() {
-    var path = "/vscode/"
-    axios.get(backendUrl+path).then(
-      res=>{
-        this.vscodeList=res.data
-      }
-    )   
-  },
-  methods: {
-    getVSCodeList(){
-      var path = "/vscode/"
-      axios.get(backendUrl+path).then(
-        res=>{
-          this.vscodeList=res.data
-        }
-      )
-    }
-  },
+  name: 'App'
 }
 </script>
 
