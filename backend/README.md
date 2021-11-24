@@ -35,6 +35,10 @@
 - curl -X DELETE localhost:8100/vscode/2
 
 
+# 로그인 기능
+## 로그인 url
+- curl -X POST localhost:8100/login/login.do
+
 
 ## issue
 - 영구 데이터를 위해 스토리지 사용 방법 고민 필요
